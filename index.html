@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analog Calculator</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #3a3a3a;
+            font-family: monospace, sans-serif;
+        }
+        .calculator {
+            width: 320px;
+            border: 2px solid #1c1c1c;
+            border-radius: 15px;
+            padding: 20px;
+            background: linear-gradient(145deg, #2e2e2e, #242424);
+            box-shadow: 5px 5px 15px #1a1a1a, -5px -5px 15px #3a3a3a;
+        }
+        .display {
+            width: 100%;
+            height: 60px;
+            background-color: #b2c2b3;
+            color: #3a3a3a;
+            text-align: right;
+            padding: 10px 15px;
+            font-size: 2.8em;
+            border: 2px inset #a1b0a2;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            overflow: hidden;
+            white-space: nowrap;
+            font-family: 'Digital-7', 'Orbitron', sans-serif;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 12px;
+        }
+        .btn {
+            padding: 18px;
+            font-size: 1.4em;
+            border: 1px solid #222;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #383838, #2e2e2e);
+            color: #f0f0f0;
+            cursor: pointer;
+            box-shadow: 3px 3px 6px #1a1a1a, -3px -3px 6px #3a3a3a;
+            transition: all 0.1s ease-in-out;
+            outline: none;
+        }
+        .btn:hover {
+            background: linear-gradient(145deg, #404040, #363636);
+        }
+        .btn:active {
+            box-shadow: inset 3px 3px 6px #1a1a1a, inset -3px -3px 6px #3a3a3a;
+            transform: translateY(1px) translateX(1px);
+            font-size: 1.35em;
+        }
+        .btn.operator {
+            background: #ff8c00; /* DarkOrange */
+            color: white;
+        }
+        .btn.operator:hover {
+            background: #e67e00;
+        }
+        .btn.clear {
+            background: #d32f2f; /* Crimson */
+            color: white;
+        }
+        .btn.clear:hover {
+            background: #b71c1c;
+        }
+        .equals {
+            grid-column: 3 / span 2;
+            grid-row: 4 / span 2;
+            background: #43a047; /* Green */
+            color: white;
+        }
+        .equals:hover {
+            background: #388e3c;
+        }
+        .btn-zero {
+            grid-column: 1 / span 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div id="display" class="display">0</div>
+        <div class="buttons">
+            <button data-value="C" class="btn clear">C</button>
+            <button data-value="/" class="btn operator">&divide;</button>
+            <button data-value="*" class="btn operator">&times;</button>
+            <button data-value="-" class="btn operator">−</button>
+
+            <button data-value="7" class="btn">7</button>
+            <button data-value="8" class="btn">8</button>
+            <button data-value="9" class="btn">9</button>
+            <button data-value="+" class="btn operator">+</button>
+
+            <button data-value="4" class="btn">4</button>
+            <button data-value="5" class="btn">5</button>
+            <button data-value="6" class="btn">6</button>
+
+            <button data-value="1" class="btn">1</button>
+            <button data-value="2" class="btn">2</button>
+            <button data-value="3" class="btn">3</button>
+            <button data-value="=" class="btn equals">=</button>
+
+            <button data-value="0" class="btn btn-zero">0</button>
+            <button data-value="." class="btn">.</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.getElementById('display');
+        const buttons = document.querySelector('.buttons');
+
+        let currentInput = '';
+        let operator = '';
+        let previousInput = '';
+        let shouldResetDisplay = false;
+
+        buttons.addEventListener('click', (event) => {
+            if (!event.target.matches('button')) return;
+
+            const value = event.target.dataset.value;
+
+            if ('+-*/'.includes(value)) {
+                handleOperator(value);
+            } else if (value === '=') {
+                handleEquals();
+            } else if (value === 'C') {
+                handleClear();
+            } else if (value === '.') {
+                handleDecimal();
+            } else {
+                handleNumber(value);
+            }
+        });
+
+        function handleNumber(value) {
+            if (currentInput === '0' || shouldResetDisplay) {
+                currentInput = '';
+                shouldResetDisplay = false;
+            }
+            if (currentInput.length < 10) {
+                currentInput += value;
+            }
+            updateDisplay();
+        }
+
+        function handleOperator(op) {
+            if (currentInput === '' && previousInput === '') return;
+            if (currentInput !== '' && previousInput !== '') {
+                handleEquals();
+            }
+
+            operator = op;
+            if (currentInput !== '') {
+              previousInput = currentInput;
+            }
+            currentInput = '';
+            shouldResetDisplay = true;
+        }
+
+        function handleEquals() {
+            if (operator === '' || previousInput === '' || currentInput === '') return;
+
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            if (isNaN(prev) || isNaN(current)) return;
+
+            switch (operator) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        result = 'Error';
+                    } else {
+                        result = prev / current;
+                    }
+                    break;
+            }
+
+            if (result === 'Error') {
+                currentInput = 'Error';
+            } else {
+                // Format result to fit display
+                result = parseFloat(result.toPrecision(10));
+                currentInput = result.toString().slice(0, 10);
+            }
+
+            operator = '';
+            previousInput = currentInput; // Allow for chained calculations
+            shouldResetDisplay = true;
+            updateDisplay();
+            previousInput = ''; // Reset after display
+        }
+
+        function handleClear() {
+            currentInput = '';
+            operator = '';
+            previousInput = '';
+            shouldResetDisplay = false;
+            updateDisplay('0');
+        }
+
+        function handleDecimal() {
+            if (shouldResetDisplay) {
+                currentInput = '0.';
+                shouldResetDisplay = false;
+                updateDisplay();
+                return;
+            }
+            if (!currentInput.includes('.')) {
+                if(currentInput === '') {
+                    currentInput = '0';
+                }
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay(value) {
+            display.textContent = value !== undefined ? value : currentInput || previousInput || '0';
+        }
+    </script>
+</body>
+</html>
